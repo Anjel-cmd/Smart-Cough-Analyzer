@@ -46,13 +46,17 @@ CLASS_NAMES = ["Healthy", "COVID"]
 # =========================
 def extract_features(file):
 
-    # RESET POINTER
-    file.stream.seek(0)
+    # READ FILE SAFELY
+    audio_bytes = file.read()
+
+    # CONVERT TO BUFFER
+    audio_buffer = io.BytesIO(audio_bytes)
 
     # LOAD AUDIO
     y, sr = librosa.load(
-        file.stream,
-        sr=22050
+        audio_buffer,
+        sr=22050,
+        mono=True
     )
 
     # VALIDATION
@@ -86,7 +90,6 @@ def extract_features(file):
         mel_db = mel_db[:, :IMG_WIDTH]
 
     return mel_db, y, sr
-
 
 # =========================
 # CREATE SPECTROGRAM IMAGE
@@ -193,6 +196,8 @@ def predict():
         # =========================
         # EXTRACT FEATURES
         # =========================
+        file.seek(0)
+
         mel_db, y, sr = extract_features(file)
 
         # =========================
