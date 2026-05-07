@@ -24,6 +24,7 @@ http://localhost:5173
 ```bash
 cd backend
 python app.py
+pip install flask flask-cors librosa matplotlib tensorflow numpy soundfile ( install dependencies if needed)
 ```
 
 Backend runs on:
