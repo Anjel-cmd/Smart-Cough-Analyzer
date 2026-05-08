@@ -403,37 +403,37 @@ const generatePDF = () => {
               </div>
 
               {/* DROP ZONE */}
-              <div
-                onDragOver={(e) => {
-                  e.preventDefault();
-
-                  setDragOver(true);
-                }}
-                onDragLeave={() =>
-                  setDragOver(false)
-                }
-                onDrop={onDrop}
-                onClick={() =>
-                  inputRef.current?.click()
-                }
-                className={`relative cursor-pointer rounded-2xl border-2 border-dashed transition p-10 text-center ${
-                  dragOver
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-primary/50 hover:bg-white/[0.02]"
-                }`}
-              >
-                <input
-                  ref={inputRef}
-                  type="file"
-                  accept="audio/wav,audio/x-wav,.wav"
-                  className="hidden"
-                  onChange={(e) =>
-                    e.target.files?.[0] &&
-                    handleFile(
-                      e.target.files[0]
-                    )
-                  }
-                />
+<div
+  onDragOver={(e) => {
+    e.preventDefault();
+    setDragOver(true);
+  }}
+  onDragLeave={() => setDragOver(false)}
+  onDrop={onDrop}
+  onClick={(e) => {
+    e.stopPropagation();
+    if (inputRef.current) {
+      inputRef.current.value = "";
+      inputRef.current.click();
+    }
+  }}
+  className={`relative cursor-pointer rounded-2xl border-2 border-dashed transition p-10 text-center ${
+    dragOver
+      ? "border-primary bg-primary/5"
+      : "border-border hover:border-primary/50 hover:bg-white/[0.02]"
+  }`}
+>
+  <input
+    ref={inputRef}
+    type="file"
+    accept=".wav"
+    className="hidden"
+    onClick={(e) => e.stopPropagation()}
+    onChange={(e) => {
+      const f = e.target.files?.[0];
+      if (f) handleFile(f);
+    }}
+  />
 
                 <div className="mx-auto w-16 h-16 rounded-2xl glass grid place-items-center mb-4">
                   <UploadCloud className="w-8 h-8 text-cyan" />
