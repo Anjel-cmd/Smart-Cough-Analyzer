@@ -14,7 +14,7 @@ npm run dev
 Frontend runs on:
 
 ```bash
-http://localhost:5173
+http://localhost:8080
 ```
 
 ---
