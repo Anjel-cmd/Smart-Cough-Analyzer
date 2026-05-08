@@ -17,11 +17,11 @@ import tensorflow as tf
 # =========================
 app = Flask(__name__)
 
-# Enable CORS
+# ENABLE CORS
 CORS(app)
 
 # =========================
-# LOAD TFLITE MODEL
+# LOAD MODEL
 # =========================
 MODEL_PATH = "cough_model.tflite"
 
@@ -39,14 +39,19 @@ INPUT_SHAPE = input_details[0]["shape"]
 IMG_HEIGHT = INPUT_SHAPE[1]
 IMG_WIDTH = INPUT_SHAPE[2]
 
-CLASS_NAMES = ["Healthy", "COVID"]
+# IMPORTANT:
+# TRY BOTH ORDERS IF PREDICTION IS WRONG
+CLASS_NAMES = ["COVID", "Healthy"]  # swap and test
 
 # =========================
 # FEATURE EXTRACTION
 # =========================
 def extract_features(file):
 
-    # READ FILE SAFELY
+    # RESET POINTER
+    file.seek(0)
+
+    # READ FILE
     audio_bytes = file.read()
 
     # CONVERT TO BUFFER
@@ -61,15 +66,18 @@ def extract_features(file):
 
     # VALIDATION
     if y is None or len(y) == 0:
-        raise ValueError("Invalid or empty audio file")
+        raise ValueError(
+            "Invalid or empty audio file"
+        )
 
-    # MEL SPECTROGRAM
+    # CREATE MEL SPECTROGRAM
     mel = librosa.feature.melspectrogram(
         y=y,
         sr=sr,
         n_mels=IMG_HEIGHT
     )
 
+    # CONVERT TO DB
     mel_db = librosa.power_to_db(
         mel,
         ref=np.max
@@ -87,16 +95,20 @@ def extract_features(file):
         )
 
     else:
+
         mel_db = mel_db[:, :IMG_WIDTH]
 
     return mel_db, y, sr
+
 
 # =========================
 # CREATE SPECTROGRAM IMAGE
 # =========================
 def create_spectrogram_image(mel_db):
 
-    fig, ax = plt.subplots(figsize=(8, 3))
+    fig, ax = plt.subplots(
+        figsize=(8, 3)
+    )
 
     ax.imshow(
         mel_db,
@@ -132,7 +144,9 @@ def create_spectrogram_image(mel_db):
 # =========================
 def create_waveform_image(y, sr):
 
-    fig, ax = plt.subplots(figsize=(10, 3))
+    fig, ax = plt.subplots(
+        figsize=(10, 3)
+    )
 
     # TIME AXIS
     time = np.linspace(
@@ -142,7 +156,11 @@ def create_waveform_image(y, sr):
     )
 
     # PLOT
-    ax.plot(time, y)
+    ax.plot(
+        time,
+        y,
+        linewidth=1
+    )
 
     ax.set_title("Waveform")
 
@@ -170,59 +188,84 @@ def create_waveform_image(y, sr):
 
 
 # =========================
-# PREDICTION ROUTE
+# HEALTH CHECK
+# =========================
+@app.route("/")
+def home():
+
+    return jsonify({
+        "message": "Cough AI Backend Running"
+    })
+
+
+# =========================
+# PREDICT ROUTE
 # =========================
 @app.route("/predict", methods=["POST"])
 def predict():
 
-    # CHECK FILE
-    if "file" not in request.files:
-
-        return jsonify({
-            "error": "No file uploaded"
-        }), 400
-
-    file = request.files["file"]
-
-    # EMPTY FILE
-    if file.filename == "":
-
-        return jsonify({
-            "error": "No selected file"
-        }), 400
-
     try:
+
+        # =========================
+        # CHECK FILE
+        # =========================
+        if "file" not in request.files:
+
+            return jsonify({
+                "error": "No file uploaded"
+            }), 400
+
+        file = request.files["file"]
+
+        if file.filename == "":
+
+            return jsonify({
+                "error": "No selected file"
+            }), 400
 
         # =========================
         # EXTRACT FEATURES
         # =========================
-        file.seek(0)
-
-        mel_db, y, sr = extract_features(file)
-
-        # =========================
-        # CREATE VISUALS
-        # =========================
-        spectrogram_base64 = create_spectrogram_image(
-            mel_db
+        mel_db, y, sr = extract_features(
+            file
         )
 
-        waveform_base64 = create_waveform_image(
-            y,
-            sr
+        # =========================
+        # CREATE IMAGES
+        # =========================
+        spectrogram_base64 = (
+            create_spectrogram_image(
+                mel_db
+            )
+        )
+
+        waveform_base64 = (
+            create_waveform_image(
+                y,
+                sr
+            )
         )
 
         # =========================
         # NORMALIZE FEATURES
         # =========================
-        features = mel_db.astype(np.float32)
+        features = mel_db.astype(
+            np.float32
+        )
 
-        max_value = np.max(np.abs(features))
+        max_value = np.max(
+            np.abs(features)
+        )
 
         if max_value != 0:
-            features = features / max_value
 
+            features = (
+                features / max_value
+            )
+
+        # =========================
         # CHANNEL HANDLING
+        # =========================
         if INPUT_SHAPE[3] == 3:
 
             features = np.stack(
@@ -237,7 +280,9 @@ def predict():
                 axis=-1
             )
 
+        # =========================
         # ADD BATCH DIMENSION
+        # =========================
         features = np.expand_dims(
             features,
             axis=0
@@ -257,26 +302,49 @@ def predict():
             output_details[0]["index"]
         )[0]
 
+        # DEBUG OUTPUT
+        print(
+            "RAW MODEL OUTPUT:",
+            output
+        )
+
         # =========================
-        # OUTPUT PROCESSING
+        # PROCESS OUTPUT
         # =========================
         if len(output) == 1:
 
-            confidence = float(output[0])
-
-            class_id = (
-                1 if confidence > 0.5 else 0
+            probability = float(
+                output[0]
             )
+
+            if probability > 0.5:
+
+                class_id = 1
+                confidence = probability
+
+            else:
+
+                class_id = 0
+                confidence = (
+                    1 - probability
+                )
 
         else:
 
-            class_id = int(np.argmax(output))
+            class_id = int(
+                np.argmax(output)
+            )
 
             confidence = float(
                 np.max(output)
             )
 
-        label = CLASS_NAMES[class_id]
+        # =========================
+        # LABEL
+        # =========================
+        label = CLASS_NAMES[
+            class_id
+        ]
 
         # =========================
         # RECOMMENDATIONS
@@ -310,7 +378,7 @@ def predict():
             ]
 
         # =========================
-        # SUCCESS RESPONSE
+        # RESPONSE
         # =========================
         return jsonify({
 
@@ -340,18 +408,7 @@ def predict():
 
 
 # =========================
-# HEALTH CHECK
-# =========================
-@app.route("/")
-def home():
-
-    return jsonify({
-        "message": "Cough AI Backend Running"
-    })
-
-
-# =========================
-# RUN SERVER
+# RUN APP
 # =========================
 if __name__ == "__main__":
 
