@@ -13,6 +13,7 @@ from flask_cors import CORS
 
 import numpy as np
 import librosa
+import soundfile as sf
 
 # =========================
 # FLASK APP
@@ -73,13 +74,27 @@ def extract_features(file):
         with os.fdopen(temp_fd, 'wb') as temp_file:
             temp_file.write(file.read())
 
-        # LOAD AUDIO (max 6 seconds to prevent OOM/timeouts)
-        y, sr = librosa.load(
-            temp_path,
-            sr=22050,
-            mono=True,
-            duration=6.0
-        )
+        # Load audio using soundfile directly to prevent audioread hangs
+        data, samplerate = sf.read(temp_path)
+        
+        # Convert to mono if stereo/multichannel
+        if len(data.shape) > 1:
+            y = np.mean(data, axis=1)
+        else:
+            y = data
+            
+        # Resample to 22050 if needed
+        if samplerate != 22050:
+            y = librosa.resample(y, orig_sr=samplerate, target_sr=22050)
+            sr = 22050
+        else:
+            sr = samplerate
+            
+        # Limit to max 6 seconds
+        max_len = int(6.0 * sr)
+        if len(y) > max_len:
+            y = y[:max_len]
+            
     finally:
         # Clean up temporary file
         try:
