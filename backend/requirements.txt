@@ -8,3 +8,4 @@ scikit-learn
 opencv-python-headless
 Flask
 Flask-Cors
+gunicorn
