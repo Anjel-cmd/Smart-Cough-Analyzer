@@ -232,7 +232,8 @@ def create_waveform_image(y, sr):
 def home():
 
     return jsonify({
-        "message": "Cough AI Backend Running"
+        "message": "Cough AI Backend Running",
+        "class_names": CLASS_NAMES
     })
 
 
