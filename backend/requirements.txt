@@ -1,11 +1,8 @@
-streamlit
-tensorflow-cpu
+tflite-runtime
 numpy
 librosa
 soundfile
 matplotlib
-scikit-learn
-opencv-python-headless
 Flask
 Flask-Cors
 gunicorn
