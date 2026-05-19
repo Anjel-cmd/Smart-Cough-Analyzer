@@ -26,7 +26,16 @@ CORS(app)
 # =========================
 MODEL_PATH = "cough_model.tflite"
 
-interpreter = tf.lite.Interpreter(
+try:
+    from tensorflow.lite.python.interpreter import Interpreter
+except ImportError:
+    try:
+        from tensorflow.lite import Interpreter
+    except ImportError:
+        import tensorflow as tf
+        Interpreter = tf.lite.Interpreter
+
+interpreter = Interpreter(
     model_path=MODEL_PATH
 )
 
