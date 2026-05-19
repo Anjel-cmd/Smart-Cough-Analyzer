@@ -59,7 +59,7 @@ IMG_WIDTH = INPUT_SHAPE[2]
 
 # IMPORTANT:
 # TRY BOTH ORDERS IF PREDICTION IS WRONG
-CLASS_NAMES = ["COVID", "Healthy"]  # swap and test
+CLASS_NAMES = ["Healthy", "COVID"]  # swap and test
 
 # =========================
 # FEATURE EXTRACTION
