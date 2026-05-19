@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import base64
 import io
 import os
+import tempfile
+import threading
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -41,6 +43,9 @@ interpreter = Interpreter(
 
 interpreter.allocate_tensors()
 
+# Lock to prevent concurrent inference crashes in Gunicorn
+prediction_lock = threading.Lock()
+
 input_details = interpreter.get_input_details()
 output_details = interpreter.get_output_details()
 
@@ -58,22 +63,27 @@ CLASS_NAMES = ["COVID", "Healthy"]  # swap and test
 # =========================
 def extract_features(file):
 
-    # RESET POINTER
-    file.seek(0)
+    # Save to a temporary file
+    temp_fd, temp_path = tempfile.mkstemp(suffix=".wav")
+    try:
+        # Reset pointer and write to temp file
+        file.seek(0)
+        with os.fdopen(temp_fd, 'wb') as temp_file:
+            temp_file.write(file.read())
 
-    # READ FILE
-    audio_bytes = file.read()
-
-    # CONVERT TO BUFFER
-    audio_buffer = io.BytesIO(audio_bytes)
-
-    # LOAD AUDIO (max 6 seconds to prevent OOM/timeouts)
-    y, sr = librosa.load(
-        audio_buffer,
-        sr=22050,
-        mono=True,
-        duration=6.0
-    )
+        # LOAD AUDIO (max 6 seconds to prevent OOM/timeouts)
+        y, sr = librosa.load(
+            temp_path,
+            sr=22050,
+            mono=True,
+            duration=6.0
+        )
+    finally:
+        # Clean up temporary file
+        try:
+            os.remove(temp_path)
+        except OSError:
+            pass
 
     # VALIDATION
     if y is None or len(y) == 0:
@@ -302,16 +312,17 @@ def predict():
         # =========================
         # MODEL PREDICTION
         # =========================
-        interpreter.set_tensor(
-            input_details[0]["index"],
-            features
-        )
+        with prediction_lock:
+            interpreter.set_tensor(
+                input_details[0]["index"],
+                features
+            )
 
-        interpreter.invoke()
+            interpreter.invoke()
 
-        output = interpreter.get_tensor(
-            output_details[0]["index"]
-        )[0]
+            output = interpreter.get_tensor(
+                output_details[0]["index"]
+            )[0]
 
         # DEBUG OUTPUT
         print(
