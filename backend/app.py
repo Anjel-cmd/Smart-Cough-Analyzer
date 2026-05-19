@@ -246,6 +246,12 @@ def predict():
                 "error": "No selected file"
             }), 400
 
+        # Log file details
+        file.seek(0, os.SEEK_END)
+        file_length = file.tell()
+        file.seek(0)
+        print(f"UPLOADED FILE: {file.filename}, Content-Type: {file.content_type}, Size: {file_length} bytes")
+
         # =========================
         # EXTRACT FEATURES
         # =========================
