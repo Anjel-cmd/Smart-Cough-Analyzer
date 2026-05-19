@@ -354,7 +354,7 @@ def predict():
         # TRY MULTIPLE NORMALIZATIONS
         # =========================
         norm_outputs = {}
-        for norm_type in ["abs_max", "min_max_0_1", "min_max_80", "none", "z_score"]:
+        for norm_type in ["abs_max", "min_max_0_1", "min_max_80", "none", "z_score", "min_max_255", "db_255"]:
             # Copy mel_db to avoid mutating
             temp_features = mel_db.copy().astype(np.float32)
             
@@ -375,6 +375,14 @@ def predict():
                 std_v = np.std(temp_features)
                 if std_v != 0:
                     temp_features = (temp_features - mean_v) / std_v
+            elif norm_type == "min_max_255":
+                min_v = np.min(temp_features)
+                max_v = np.max(temp_features)
+                if max_v - min_v != 0:
+                    temp_features = 255.0 * (temp_features - min_v) / (max_v - min_v)
+            elif norm_type == "db_255":
+                temp_features = 255.0 * (temp_features + 80.0) / 80.0
+                temp_features = np.clip(temp_features, 0.0, 255.0)
             
             # Channel handling
             if INPUT_SHAPE[3] == 3:
