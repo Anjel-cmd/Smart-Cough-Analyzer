@@ -235,7 +235,9 @@ def home():
         "message": "Cough AI Backend Running",
         "class_names": CLASS_NAMES,
         "input_details_shape": [int(x) for x in input_details[0]["shape"]],
-        "output_details_shape": [int(x) for x in output_details[0]["shape"]]
+        "output_details_shape": [int(x) for x in output_details[0]["shape"]],
+        "input_details_dtype": str(input_details[0]["dtype"]),
+        "output_details_dtype": str(output_details[0]["dtype"])
     })
 
 
