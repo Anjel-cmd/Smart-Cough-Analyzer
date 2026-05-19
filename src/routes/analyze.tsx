@@ -111,7 +111,7 @@ function Analyze() {
 
     formData.append("file", file);
 
-    const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000";
+    const apiUrl = "https://smart-cough-backend.onrender.com";
     fetch(`${apiUrl}/predict`, {
       method: "POST",
       body: formData,
