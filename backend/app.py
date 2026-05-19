@@ -244,17 +244,30 @@ def home():
 
 @app.route("/model_details")
 def model_details():
+    def serialize_val(val):
+        if isinstance(val, dict):
+            return {k: serialize_val(v) for k, v in val.items()}
+        elif isinstance(val, (list, tuple)):
+            return [serialize_val(x) for x in val]
+        elif isinstance(val, np.ndarray):
+            return val.tolist()
+        elif isinstance(val, (np.integer, int)):
+            return int(val)
+        elif isinstance(val, (np.floating, float)):
+            return float(val)
+        elif isinstance(val, type):
+            return val.__name__ if hasattr(val, "__name__") else str(val)
+        try:
+            return val
+        except:
+            return str(val)
+
     def serialize_details(details):
         serialized = []
         for d in details:
             item = {}
             for k, v in d.items():
-                if k == "dtype":
-                    item[k] = str(v)
-                elif isinstance(v, np.ndarray):
-                    item[k] = v.tolist()
-                else:
-                    item[k] = v
+                item[k] = serialize_val(v)
             serialized.append(item)
         return serialized
 
