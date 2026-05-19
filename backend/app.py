@@ -392,15 +392,18 @@ def predict():
         # TRY MULTIPLE NORMALIZATIONS
         # =========================
         norm_outputs = {}
-        for norm_type in ["abs_max", "min_max_0_1", "min_max_80", "none", "z_score", "min_max_255", "db_255", "min_max_neg1_1", "imagenet"]:
-            # Copy mel_db to avoid mutating
-            temp_features = mel_db.copy().astype(np.float32)
+        for norm_type in ["abs_max", "min_max_0_1", "min_max_80", "none", "z_score", "min_max_255", "db_255", "min_max_neg1_1", "imagenet", "raw_min_max_0_1", "raw_z_score"]:
+            # Copy appropriate source features
+            if norm_type.startswith("raw_"):
+                temp_features = mel.copy().astype(np.float32)
+            else:
+                temp_features = mel_db.copy().astype(np.float32)
             
             if norm_type == "abs_max":
                 mv = np.max(np.abs(temp_features))
                 if mv != 0:
                     temp_features = temp_features / mv
-            elif norm_type == "min_max_0_1":
+            elif norm_type in ["min_max_0_1", "raw_min_max_0_1"]:
                 min_v = np.min(temp_features)
                 max_v = np.max(temp_features)
                 if max_v - min_v != 0:
@@ -408,7 +411,9 @@ def predict():
             elif norm_type == "min_max_80":
                 temp_features = (temp_features + 80.0) / 80.0
                 temp_features = np.clip(temp_features, 0.0, 1.0)
-            elif norm_type == "z_score":
+            elif norm_type == "none":
+                pass
+            elif norm_type in ["z_score", "raw_z_score"]:
                 mean_v = np.mean(temp_features)
                 std_v = np.std(temp_features)
                 if std_v != 0:
