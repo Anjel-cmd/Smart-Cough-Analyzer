@@ -357,7 +357,7 @@ def predict():
         # TRY MULTIPLE NORMALIZATIONS
         # =========================
         norm_outputs = {}
-        for norm_type in ["abs_max", "min_max_0_1", "min_max_80", "none", "z_score", "min_max_255", "db_255"]:
+        for norm_type in ["abs_max", "min_max_0_1", "min_max_80", "none", "z_score", "min_max_255", "db_255", "min_max_neg1_1", "imagenet"]:
             # Copy mel_db to avoid mutating
             temp_features = mel_db.copy().astype(np.float32)
             
