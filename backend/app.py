@@ -129,7 +129,8 @@ def extract_features(file):
         mel_db = np.pad(
             mel_db,
             ((0, 0), (0, pad)),
-            mode="constant"
+            mode="constant",
+            constant_values=np.min(mel_db)
         )
 
     else:
