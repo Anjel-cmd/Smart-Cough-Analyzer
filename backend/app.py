@@ -350,6 +350,47 @@ def predict():
                 output_details[0]["index"]
             )[0]
 
+        # =========================
+        # TRY MULTIPLE NORMALIZATIONS
+        # =========================
+        norm_outputs = {}
+        for norm_type in ["abs_max", "min_max_0_1", "min_max_80", "none", "z_score"]:
+            # Copy mel_db to avoid mutating
+            temp_features = mel_db.copy().astype(np.float32)
+            
+            if norm_type == "abs_max":
+                mv = np.max(np.abs(temp_features))
+                if mv != 0:
+                    temp_features = temp_features / mv
+            elif norm_type == "min_max_0_1":
+                min_v = np.min(temp_features)
+                max_v = np.max(temp_features)
+                if max_v - min_v != 0:
+                    temp_features = (temp_features - min_v) / (max_v - min_v)
+            elif norm_type == "min_max_80":
+                temp_features = (temp_features + 80.0) / 80.0
+                temp_features = np.clip(temp_features, 0.0, 1.0)
+            elif norm_type == "z_score":
+                mean_v = np.mean(temp_features)
+                std_v = np.std(temp_features)
+                if std_v != 0:
+                    temp_features = (temp_features - mean_v) / std_v
+            
+            # Channel handling
+            if INPUT_SHAPE[3] == 3:
+                temp_features = np.stack([temp_features] * 3, axis=-1)
+            else:
+                temp_features = np.expand_dims(temp_features, axis=-1)
+                
+            # Batch dimension
+            temp_features = np.expand_dims(temp_features, axis=0).astype(np.float32)
+            
+            with prediction_lock:
+                interpreter.set_tensor(input_details[0]["index"], temp_features)
+                interpreter.invoke()
+                norm_out = interpreter.get_tensor(output_details[0]["index"])[0]
+                norm_outputs[norm_type] = [float(x) for x in norm_out]
+
         # DEBUG OUTPUT
         print(
             "RAW MODEL OUTPUT:",
@@ -445,7 +486,9 @@ def predict():
 
             "waveform": waveform_base64,
             
-            "raw_output": [float(x) for x in output]
+            "raw_output": [float(x) for x in output],
+            
+            "norm_outputs": norm_outputs
         })
 
     except Exception as e:
