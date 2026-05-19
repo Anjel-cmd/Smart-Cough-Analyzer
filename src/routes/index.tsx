@@ -70,7 +70,7 @@ function Landing() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.9, delay: 0.2 }}
-            className="relative"
+            className="relative hidden lg:block"
           >
             <div className="absolute -inset-4 gradient-primary opacity-30 blur-3xl rounded-full" />
             <div className="relative glass rounded-3xl p-3 animate-float-slow">
