@@ -13,7 +13,6 @@ from flask_cors import CORS
 
 import numpy as np
 import librosa
-import tensorflow as tf
 
 # =========================
 # FLASK APP
@@ -29,13 +28,16 @@ CORS(app)
 MODEL_PATH = "cough_model.tflite"
 
 try:
-    from tensorflow.lite.python.interpreter import Interpreter
+    from tflite_runtime.interpreter import Interpreter
 except ImportError:
     try:
-        from tensorflow.lite import Interpreter
+        from tensorflow.lite.python.interpreter import Interpreter
     except ImportError:
-        import tensorflow as tf
-        Interpreter = tf.lite.Interpreter
+        try:
+            from tensorflow.lite import Interpreter
+        except ImportError:
+            import tensorflow as tf
+            Interpreter = tf.lite.Interpreter
 
 interpreter = Interpreter(
     model_path=MODEL_PATH
