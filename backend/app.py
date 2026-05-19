@@ -242,6 +242,28 @@ def home():
     })
 
 
+@app.route("/model_details")
+def model_details():
+    def serialize_details(details):
+        serialized = []
+        for d in details:
+            item = {}
+            for k, v in d.items():
+                if k == "dtype":
+                    item[k] = str(v)
+                elif isinstance(v, np.ndarray):
+                    item[k] = v.tolist()
+                else:
+                    item[k] = v
+            serialized.append(item)
+        return serialized
+
+    return jsonify({
+        "input_details": serialize_details(input_details),
+        "output_details": serialize_details(output_details)
+    })
+
+
 # =========================
 # PREDICT ROUTE
 # =========================
