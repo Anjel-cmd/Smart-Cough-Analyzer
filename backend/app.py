@@ -386,12 +386,28 @@ def predict():
             elif norm_type == "db_255":
                 temp_features = 255.0 * (temp_features + 80.0) / 80.0
                 temp_features = np.clip(temp_features, 0.0, 255.0)
-            
-            # Channel handling
-            if INPUT_SHAPE[3] == 3:
+            elif norm_type == "min_max_neg1_1":
+                min_v = np.min(temp_features)
+                max_v = np.max(temp_features)
+                if max_v - min_v != 0:
+                    temp_features = (temp_features - min_v) / (max_v - min_v) * 2.0 - 1.0
+            elif norm_type == "imagenet":
+                min_v = np.min(temp_features)
+                max_v = np.max(temp_features)
+                if max_v - min_v != 0:
+                    temp_features = (temp_features - min_v) / (max_v - min_v)
+                # Stack first
                 temp_features = np.stack([temp_features] * 3, axis=-1)
-            else:
-                temp_features = np.expand_dims(temp_features, axis=-1)
+                mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
+                std = np.array([0.229, 0.224, 0.225], dtype=np.float32)
+                temp_features = (temp_features - mean) / std
+            
+            # Channel handling (skip if already stacked in imagenet)
+            if norm_type != "imagenet":
+                if INPUT_SHAPE[3] == 3:
+                    temp_features = np.stack([temp_features] * 3, axis=-1)
+                else:
+                    temp_features = np.expand_dims(temp_features, axis=-1)
                 
             # Batch dimension
             temp_features = np.expand_dims(temp_features, axis=0).astype(np.float32)
