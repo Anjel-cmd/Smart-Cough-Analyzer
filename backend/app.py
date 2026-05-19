@@ -440,7 +440,9 @@ def predict():
 
             "spectrogram": spectrogram_base64,
 
-            "waveform": waveform_base64
+            "waveform": waveform_base64,
+            
+            "raw_output": [float(x) for x in output]
         })
 
     except Exception as e:
