@@ -108,11 +108,11 @@ def extract_features(file):
             "Invalid or empty audio file"
         )
 
-    # CREATE MEL SPECTROGRAM
     mel = librosa.feature.melspectrogram(
         y=y,
         sr=sr,
-        n_mels=IMG_HEIGHT
+        n_mels=IMG_HEIGHT,
+        fmax=8000
     )
 
     # CONVERT TO DB
