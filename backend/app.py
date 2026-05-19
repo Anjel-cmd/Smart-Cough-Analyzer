@@ -424,10 +424,11 @@ def predict():
 
     except Exception as e:
 
-        print("ERROR:", str(e))
+        error_msg = f"{type(e).__name__}: {str(e)}"
+        print("ERROR:", error_msg)
 
         return jsonify({
-            "error": str(e)
+            "error": error_msg
         }), 500
 
 
