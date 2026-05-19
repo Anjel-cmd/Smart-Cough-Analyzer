@@ -58,11 +58,12 @@ def extract_features(file):
     # CONVERT TO BUFFER
     audio_buffer = io.BytesIO(audio_bytes)
 
-    # LOAD AUDIO
+    # LOAD AUDIO (max 6 seconds to prevent OOM/timeouts)
     y, sr = librosa.load(
         audio_buffer,
         sr=22050,
-        mono=True
+        mono=True,
+        duration=6.0
     )
 
     # VALIDATION
