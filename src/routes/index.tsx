@@ -5,14 +5,6 @@ import { Navbar } from "@/components/Navbar";
 import heroImg from "@/assets/hero-lungs.jpg";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Smart Cough Analyzer — AI Respiratory Health Prediction" },
-      { name: "description", content: "AI-powered cough analysis for smart respiratory health prediction. Upload audio and get instant insights." },
-      { property: "og:title", content: "Smart Cough Analyzer" },
-      { property: "og:description", content: "AI-powered cough analysis for smart respiratory health prediction." },
-    ],
-  }),
   component: Landing,
 });
 

@@ -5,12 +5,6 @@ import { Heart, Send, Github, Twitter, Linkedin, Mail, CheckCircle2 } from "luci
 import { Navbar } from "@/components/Navbar";
 
 export const Route = createFileRoute("/contact")({
-  head: () => ({
-    meta: [
-      { title: "Stay Healthy — Smart Cough Analyzer" },
-      { name: "description", content: "Thank you for using Smart Cough Analyzer. Get in touch with our team." },
-    ],
-  }),
   component: Contact,
 });
 

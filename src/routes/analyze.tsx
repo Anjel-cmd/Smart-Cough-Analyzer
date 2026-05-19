@@ -23,17 +23,6 @@ import { useRef, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 
 export const Route = createFileRoute("/analyze")({
-  head: () => ({
-    meta: [
-      { title: "Analyze — Smart Cough Analyzer" },
-      {
-        name: "description",
-        content:
-          "Upload a WAV cough recording and receive an AI prediction with confidence score and spectrogram.",
-      },
-    ],
-  }),
-
   component: Analyze,
 });
 
